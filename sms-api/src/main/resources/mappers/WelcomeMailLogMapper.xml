@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.dao.WelcomeMailLogDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.com.entities.WelcomeMailLogEntity">
+        <id column="msg_id" property="msgId" />
+        <result column="emp_id" property="empId" />
+        <result column="attempt_count" property="attemptCount" />
+        <result column="status" property="status" />
+        <result column="try_time" property="tryTime" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="exchange" property="exchange" />
+        <result column="routing_key" property="routingKey" />
+    </resultMap>
+
+    <select id="findMessageByStatusAndTryTime" resultType="list" resultMap="BaseResultMap">
+        SELECT
+        wl.msg_id,
+        wl.emp_id,
+        wl.attempt_count,
+        wl.`status`,
+        wl.try_time,
+        wl.create_time,
+        wl.update_time,
+        wl.exchange,
+        wl.routing_key
+        from welcome_mail_log wl where wl.`status` = #{welcomeEntity.status} and wl.try_time &lt;= #{welcomeEntity.tryTime} LIMIT #{page}, #{size}
+    </select>
+
+    <update id="idempotentInConsumers">
+        UPDATE welcome_mail_log wl
+        <set>
+            wl.`status` = #{clientReceivedStatus},
+            <if test="welcomeEntity.tryTime != null">
+                wl.try_time = #{welcomeEntity.tryTime},
+            </if>
+            <if test="welcomeEntity.updateTime != null">
+                wl.update_time = #{welcomeEntity.updateTime},
+            </if>
+            <if test="welcomeEntity.exchange != null">
+                wl.exchange = #{welcomeEntity.exchange},
+            </if>
+            <if test="welcomeEntity.routingKey != null">
+                wl.routing_key = #{welcomeEntity.routingKey},
+            </if>
+        </set>
+        WHERE
+            wl.msg_id = #{welcomeEntity.msgId} AND wl.`status` = #{welcomeEntity.status}
+    </update>
+</mapper>

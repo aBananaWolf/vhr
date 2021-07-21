@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.dao.ErrorMailSendLogDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.com.entities.ErrorMailSendLogEntity">
+        <id column="msg_id" property="msgId"/>
+        <result column="body" property="body"/>
+        <result column="routing_key" property="routingKey"/>
+        <result column="exchange" property="exchange"/>
+        <result column="count" property="count"/>
+        <result column="create_time" property="createTime"/>
+        <result column="try_time" property="tryTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <select id="selectMessageByStatusAndTryTime" resultType="list" resultMap="BaseResultMap">
+        SELECT
+            el.msg_id,
+            el.body,
+            el.routing_key,
+            el.exchange,
+            el.count,
+            el.create_time,
+            el.try_time,
+            el.update_time,
+            el.`status`
+        from error_mail_send_log el
+        where
+            el.`status` = #{errorMail.status}
+            and el.try_time &lt;= #{errorMail.tryTime}
+        limit #{pageNum}, #{pageSize}
+    </select>
+
+    <update id="idempotentInConsumers">
+        update
+         error_mail_send_log el
+        <set>
+            el.status = #{clientReceivedStatus},
+            <if test="errorMail.updateTime != null">
+                el.update_time = #{errorMail.updateTime},
+            </if>
+            <if test="errorMail.tryTime != null">
+                el.try_time = #{errorMail.tryTime},
+            </if>
+            <if test="errorMail.exchange != null" >
+                el.exchange = #{errorMail.exchange},
+            </if>
+            <if test="errorMail.routingKey != null" >
+                el.routing_key = #{errorMail.routingKey}
+            </if>
+        </set>
+       where el.msg_id = #{errorMail.msgId} and el.`status` = #{errorMail.status};
+    </update>
+
+</mapper>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.dao.HrDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.com.entities.HrEntity">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="phone" property="phone"/>
+        <result column="telephone" property="telephone"/>
+        <result column="address" property="address"/>
+        <result column="enabled" property="enabled"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="userface" property="userface"/>
+        <result column="remark" property="remark"/>
+    </resultMap>
+    <!-- extends继承上面的resultMap -->
+    <resultMap id="listHrAndRoleByHrBOMap" type="cn.com.bo.HrBO" extends="BaseResultMap">
+        <!--
+            roles 为我的实体类中映射的属性, 这里填上ofType和resultMap，注意resultMap是带上名称空间的，这非常重要
+            columnPrefix 这条属性允许我们对sql查询结果进行映射，我们的sql语句中role_开头的都是属于roles属性的值
+         -->
+        <collection property="roles" ofType="cn.com.entities.RoleEntity" resultMap="cn.com.dao.RoleDao.BaseResultMap" columnPrefix="role_"/>
+    </resultMap>
+
+    <sql id="hrAndRoleResult">
+        h.id,
+        h.`name`,
+        h.phone,
+        h.telephone,
+        h.address,
+        h.enabled,
+        h.username,
+        h.`password`,
+        h.userface,
+        h.remark,
+        r.id as 'role_id',
+        r.`name` as 'role_name',
+        r.nameZh as 'role_nameZh'
+    </sql>
+    <sql id="hrResult">
+        inner_h.id,
+        inner_h.`name`,
+        inner_h.phone,
+        inner_h.telephone,
+        inner_h.address,
+        inner_h.enabled,
+        inner_h.username,
+        inner_h.`password`,
+        inner_h.userface,
+        inner_h.remark
+    </sql>
+
+    <select id="listHrAndRoleByHrBO" parameterType="cn.com.bo.HrBO" resultMap="listHrAndRoleByHrBOMap">
+        SELECT
+            <include refid="hrAndRoleResult"/>
+        FROM
+            (
+                SELECT
+                   <include refid="hrResult"/>
+                FROM
+                    hr inner_h
+                <where>
+                    <if test="username != null">
+                        inner_h.username = #{username}
+                    </if>
+                    <if test="phone != null">
+                        inner_h.phone = #{phone}
+                    </if>
+                </where>
+            ) h
+        LEFT JOIN hr_role hro ON hro.hrid = h.id left join role r on hro.rid = r.id
+    </select>
+
+    <!--List<HrBO> selectAllHrsWithRole(HrEntity hrEntity);-->
+    <select id="selectAllHrsWithRole" parameterType="cn.com.entities.HrEntity" resultMap="listHrAndRoleByHrBOMap">
+        SELECT
+            <include refid="hrAndRoleResult"/>
+        from
+        (
+            SELECT
+                <include refid="hrResult"/>
+            from hr inner_h
+                <where>
+                    <if test="name != null and name != ''">
+                        inner_h inner_h.`name` like #{name}
+                    </if>
+                </where>
+            ) h
+        left join hr_role hr on h.id = hr.hrid left join role r on r.id = hr.rid
+    </select>
+
+</mapper>

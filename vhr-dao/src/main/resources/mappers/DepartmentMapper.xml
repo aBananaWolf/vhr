@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.dao.DepartmentDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.com.entities.DepartmentEntity">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="parentId" property="parentId" />
+        <result column="depPath" property="depPath" />
+        <result column="enabled" property="enabled" />
+        <result column="isParent" property="isParent" />
+    </resultMap>
+
+    <resultMap id="selectAllDepartmentsMap" type="cn.com.bo.DepartmentBO" extends="BaseResultMap">
+        <collection property="children" ofType="cn.com.bo.DepartmentBO" select="cn.com.dao.DepartmentDao.selectAllDepartments" column="id"/>
+    </resultMap>
+
+    <select id="selectAllDepartments" resultMap="selectAllDepartmentsMap" parameterType="Integer">
+        SELECT
+        d.id,
+        d.`name`,
+        d.parentId,
+        d.depPath,
+        d.enabled,
+        d.isParent
+        from department d
+        where d.parentId = #{id}
+    </select>
+
+    <!--
+        delimiter $$ # 修改分隔符，从 ";" 修改到 "$$" ，它自定义的
+
+        drop procedure if exists add_department$$
+
+               # 定义者                     存储过程      name    [out/in columnName MYSQL_TYPE]
+        create definer=`root`@`localhost` procedure add_department (in parent_id int(11), in department_name varchar(32), in enabled tinyint(1), out affected_raws_count int, out result_id int)
+
+        BEGIN # 开始
+          declare trace_path varchar(255); # 声明两个变量
+          declare department_id int(11);
+          # 插入数据
+          insert into department (`name`,parentId,enabled) values (department_name,parent_id,enabled);
+          # 结果1，影响行数，可做标志位
+          select row_count() into affected_raws_count;
+          # lastInsertId
+          select last_insert_id() into department_id;
+          set result_id = department_id;
+          # depPath 是让数据库上的值更直观，可以追踪路径来观察
+          select d.depPath into trace_path from department d where d.id = parent_id;
+          # 修改父部门为isParent = true
+          update department d set d.isParent = true where d.id = parentId;
+          # 修改depPath, 格式为 父Path + "." + 刚插入的数据Id主键
+          update department d set d.depPath = concat(trace_path,'.',department_id) where d.id = department_id;
+
+        end$$ # 新分隔符结尾
+
+        delimiter; # 切换回 ";"
+    -->
+    <select id="insertDepartment" statementType="CALLABLE" parameterType="cn.com.bo.DepartmentBO">
+        call add_department(
+            #{parentId, mode=IN, jdbcType=INTEGER},
+             #{name, mode=IN, jdbcType=VARCHAR},
+              #{enabled, mode=IN, jdbcType=TINYINT},
+               #{isParent, mode=IN, jdbcType=TINYINT},
+                #{affectedRows, mode=OUT, jdbcType=INTEGER},
+                 #{id, mode=OUT, jdbcType=BIGINT}
+            )
+    </select>
+
+    <!--
+        delimiter $$
+
+        drop procedure if exists delete_department$$
+
+        create definer=`root`@`localhost` procedure delete_department (in department_id int(11), out affected_rows_count int, out extension_flag int)
+
+        BEGIN
+          declare emp_count int(11);
+          declare dept_sub_count int(11);
+          select count(*) into emp_count,extension_flag from employee e where e.departmentId = department_id;
+
+          if emp_count > 0 then
+            set affected_rows_count = -1;
+            # 这个标志位在if语句中设置，不要在into设置值(如果往后继续走那么累计很多次)
+            set extension_flag = emp_count;
+          else
+            select count(*) into dept_sub_count from department d where d.parentId = department_id;
+            if dept_sub_count > 0 then
+               set affected_rows_count = -2;
+               set extension_flag = dept_sub_count;
+            else
+                     delete from department where id = department_id and isParent = false;
+               select row_count() into affected_rows_count;
+               # 最后初始化一下即可，不设置似乎会在执行的时候报错
+               set extension_flag = 1;
+            end if;
+          end if;
+        END$$
+
+        delimiter ;
+
+
+    -->
+    <select id="deleteDepartmentById" statementType="CALLABLE" parameterType="cn.com.bo.DepartmentBO">
+        call delete_department(
+            #{id, mode=IN, jdbcType=INTEGER},
+            #{affectedRows, mode=OUT, jdbcType=INTEGER},
+            #{extensionFlag, mode=OUT, jdbcType=INTEGER}
+        )
+    </select>
+</mapper>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.dao.MenuDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.com.entities.MenuEntity">
+        <id column="id" property="id" />
+        <result column="url" property="url" />
+        <result column="path" property="path" />
+        <result column="component" property="component" />
+        <result column="name" property="name" />
+        <result column="iconCls" property="iconCls" />
+        <result column="keepAlive" property="keepAlive" />
+        <result column="requireAuth" property="requireAuth" />
+        <result column="parentId" property="parentId" />
+        <result column="enabled" property="enabled" />
+    </resultMap>
+
+    <resultMap id="listAllMenuAndRoleMap" type="cn.com.bo.MenuBO" extends="BaseResultMap">
+        <collection property="roles" ofType="cn.com.entities.RoleEntity" resultMap="cn.com.dao.RoleDao.BaseResultMap" columnPrefix="role_"/>
+    </resultMap>
+
+    <resultMap id="listMenuByHr" type="cn.com.vo.MenuVO" extends="BaseResultMap">
+        <collection property="children" ofType="cn.com.vo.MenuVO" resultMap="BaseResultMap" columnPrefix="children_"/>
+    </resultMap>
+
+    <select id="listAllMenuAndRole" resultMap="listAllMenuAndRoleMap">
+        SELECT
+            m.id,
+            m.url,
+            m.path,
+            m.component,
+            m.`name`,
+            m.iconCls,
+            m.keepAlive,
+            m.requireAuth,
+            m.parentId,
+            m.enabled,
+            r.id AS role_id,
+            r.`name` AS role_name,
+            r.nameZh AS role_nameZh
+        FROM
+            menu m
+        LEFT JOIN menu_role mr ON m.id = mr.mid
+        LEFT JOIN role r ON mr.rid = r.id
+    </select>
+
+    <select id="listMenuByHr" parameterType="list" resultMap="listMenuByHr">
+        SELECT
+        parent_m.id,
+        parent_m.url,
+        parent_m.path,
+        parent_m.component,
+        parent_m.`name`,
+        parent_m.iconCls,
+        parent_m.keepAlive,
+        parent_m.requireAuth,
+        parent_m.parentId,
+        parent_m.enabled,
+        m.id AS children_id,
+        m.url AS children_url,
+        m.path AS children_path,
+        m.component AS children_component,
+        m.`name` AS children_name,
+        m.iconCls AS children_iconCls,
+        m.keepAlive AS children_keepAlive,
+        m.requireAuth AS children_requireAuth,
+        m.parentId AS children_parentId,
+        m.enabled AS children_enabled
+        FROM
+            (
+                SELECT DISTINCT
+                    mr.mid
+                FROM
+                    (
+                        SELECT
+                            inner_r.id
+                        FROM
+                            role inner_r
+                        WHERE
+                            inner_r.`name` IN (
+                            <foreach collection="roles" item="name" separator=",">
+                                #{name}
+                            </foreach>
+                            )
+                    ) r
+                LEFT JOIN menu_role mr ON r.id = mr.rid
+            ) mmr
+        LEFT JOIN menu m ON mmr.mid = m.id left join menu parent_m on m.parentId = parent_m.id
+    </select>
+</mapper>

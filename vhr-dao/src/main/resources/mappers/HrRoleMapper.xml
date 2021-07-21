@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.dao.HrRoleDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.com.entities.HrRoleEntity">
+        <id column="id" property="id" />
+        <result column="hrid" property="hrid" />
+        <result column="rid" property="rid" />
+    </resultMap>
+
+    <select id="bachSave" parameterType="list">
+        INSERT INTO hr_role (`hrid`, `rid`) VALUES
+        <foreach collection="hrRole" item="item" open="(" close=")" separator="),(">
+            #{item.hrid}, #{item.rid}
+        </foreach>
+    </select>
+
+</mapper>

@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.dao.EmployeeDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.com.entities.EmployeeEntity">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="gender" property="gender" />
+        <result column="birthday" property="birthday" />
+        <result column="idCard" property="idCard" />
+        <result column="wedlock" property="wedlock" />
+        <result column="nationId" property="nationId" />
+        <result column="nativePlace" property="nativePlace" />
+        <result column="politicId" property="politicId" />
+        <result column="email" property="email" />
+        <result column="phone" property="phone" />
+        <result column="address" property="address" />
+        <result column="departmentId" property="departmentId" />
+        <result column="jobLevelId" property="jobLevelId" />
+        <result column="posId" property="posId" />
+        <result column="engageForm" property="engageForm" />
+        <result column="tiptopDegree" property="tiptopDegree" />
+        <result column="specialty" property="specialty" />
+        <result column="school" property="school" />
+        <result column="beginDate" property="beginDate" />
+        <result column="workState" property="workState" />
+        <result column="workID" property="workID" />
+        <result column="contractTerm" property="contractTerm" />
+        <result column="conversionTime" property="conversionTime" />
+        <result column="notWorkDate" property="notWorkDate" />
+        <result column="beginContract" property="beginContract" />
+        <result column="endContract" property="endContract" />
+        <result column="workAge" property="workAge" />
+    </resultMap>
+    <resultMap id="AllEmployeeInfo" type="cn.com.bo.EmployeeBO" extends="BaseResultMap">
+        <association property="nation" javaType="cn.com.entities.NationEntity" columnPrefix="n_" resultMap="cn.com.dao.NationDao.BaseResultMap"/>
+        <association property="politicsstatus" javaType="cn.com.entities.PoliticsstatusEntity" columnPrefix="p_" resultMap="cn.com.dao.PoliticsstatusDao.BaseResultMap"/>
+        <association property="department" javaType="cn.com.entities.DepartmentEntity" columnPrefix="d_" resultMap="cn.com.dao.DepartmentDao.BaseResultMap"/>
+        <association property="jobLevel" javaType="cn.com.entities.JoblevelEntity" columnPrefix="j_" resultMap="cn.com.dao.JoblevelDao.BaseResultMap"/>
+        <association property="position" javaType="cn.com.entities.PositionEntity" columnPrefix="pos_" resultMap="cn.com.dao.PositionDao.BaseResultMap"/>
+    </resultMap>
+
+<!--    <resultMap id="selectEmployeeByPage" type="arrayList">-->
+<!--        <collection property="employeeEntityList" ofType="cn.com.entities.EmployeeEntity" resultMap="BaseResultMap"/>-->
+<!--    </resultMap>-->
+    <resultMap id="selectEmployeeByPageTotalCount" type="Long">
+        <result column="total_count"/>
+    </resultMap>
+
+    <sql id="selectResult">
+        emp.id,
+        emp.`name`,
+        emp.gender,
+        emp.birthday,
+        emp.idCard,
+        emp.wedlock,
+        emp.nationId,
+        emp.nativePlace,
+        emp.politicId,
+        emp.email,
+        emp.phone,
+        emp.address,
+        emp.departmentId,
+        emp.jobLevelId,
+        emp.posId,
+        emp.engageForm,
+        emp.tiptopDegree,
+        emp.specialty,
+        emp.school,
+        emp.beginDate,
+        emp.workState,
+        emp.workID,
+        emp.contractTerm,
+        emp.conversionTime,
+        emp.notWorkDate,
+        emp.beginContract,
+        emp.endContract,
+        emp.workAge
+    </sql>
+
+    <sql id="insertCondition">
+        (`id`, `name`, `gender`, `birthday`, `idCard`, `wedlock`, `nationId`, `nativePlace`, `politicId`, `email`, `phone`, `address`, `departmentId`, `jobLevelId`, `posId`, `engageForm`, `tiptopDegree`, `specialty`, `school`, `beginDate`, `workState`, `workID`, `contractTerm`, `conversionTime`, `notWorkDate`, `beginContract`, `endContract`, `workAge`)
+    </sql>
+
+    <sql id="selectParam">
+        #{emp.id},
+        #{emp.name},
+        #{emp.gender},
+        #{emp.birthday},
+        #{emp.idCard},
+        #{emp.wedlock},
+        #{emp.nationId},
+        #{emp.nativePlace},
+        #{emp.politicId},
+        #{emp.email},
+        #{emp.phone},
+        #{emp.address},
+        #{emp.departmentId},
+        #{emp.jobLevelId},
+        #{emp.posId},
+        #{emp.engageForm},
+        #{emp.tiptopDegree},
+        #{emp.specialty},
+        #{emp.school},
+        #{emp.beginDate},
+        #{emp.workState},
+        #{emp.workID},
+        #{emp.contractTerm},
+        #{emp.conversionTime},
+        #{emp.notWorkDate},
+        #{emp.beginContract},
+        #{emp.endContract},
+        #{emp.workAge}
+    </sql>
+
+    <sql id="empPageCondition">
+        from employee e
+        <trim prefix="where" suffixOverrides="and |or">
+            <if test="emp.id != null"> e.id = #{emp.id} and </if>
+            <if test="emp.name != null and emp.name != ''"> e.name like #{emp.name} and </if>
+            <if test="emp.gender != null and emp.gender != ''"> e.gender = #{emp.gender} and </if>
+            <if test="emp.birthday != null"> e.birthday = #{emp.birthday} and </if>
+            <if test="emp.idCard != null"> e.idCard = #{emp.idCard} and </if>
+            <if test="emp.wedlock != null and emp.wedlock != ''"> e.wedlock = #{emp.wedlock} and </if>
+            <if test="emp.nationId != null"> e.nationId = #{emp.nationId} and </if>
+            <if test="emp.nativePlace != null and emp.nativePlace != ''"> e.nativePlace like #{emp.nativePlace} and </if>
+            <if test="emp.politicId != null"> e.politicId = #{emp.politicId} and </if>
+            <if test="emp.email != null and emp.email != ''"> e.email = #{emp.email} and </if>
+            <if test="emp.phone != null and emp.phone != ''"> e.phone = #{emp.phone} and </if>
+            <if test="emp.address != null and emp.address != ''"> e.address like #{emp.address} and </if>
+            <if test="emp.departmentId != null"> e.departmentId = #{emp.departmentId} and </if>
+            <if test="emp.jobLevelId != null"> e.jobLevelId = #{emp.jobLevelId} and </if>
+            <if test="emp.posId != null"> e.posId = #{emp.posId} and </if>
+            <if test="emp.engageForm != null and emp.engageForm != ''"> e.engageForm = #{emp.engageForm} and </if>
+            <if test="emp.tiptopDegree != null and emp.tiptopDegree != ''"> e.tiptopDegree like #{emp.tiptopDegree} and </if>
+            <if test="emp.specialty != null and emp.specialty != ''"> e.specialty like #{emp.specialty} and </if>
+            <if test="emp.school != null and emp.school != ''"> e.school like #{emp.school} and </if>
+            <if test="emp.workState != null"> e.workState = #{emp.workState} and </if>
+            <if test="emp.workID != null"> e.workID = #{emp.workID} and </if>
+            <if test="emp.contractTerm != null"> e.contractTerm = #{emp.contractTerm} and </if>
+            <if test="emp.conversionTime != null"> e.conversionTime = #{emp.conversionTime} and </if>
+            <if test="emp.notWorkDate != null"> e.notWorkDate = #{emp.notWorkDate} and </if>
+            <if test="emp.beginContract != null"> e.beginContract = #{emp.beginContract} and </if>
+            <if test="emp.endContract != null"> e.endContract = #{emp.endContract} and </if>
+            <if test="emp.workAge != null"> e.workAge = #{emp.workAge} and </if>
+            <if test="dateArray != null"> e.beginDate between #{dateArray[0]} and #{dateArray[1]} </if>
+        </trim>
+    </sql>
+
+    <select id="getEmployeeByLimit" resultMap="AllEmployeeInfo,selectEmployeeByPageTotalCount">
+        SELECT
+        <include refid="selectResult"/>,
+        n.id AS `n_id`,
+        n.`name` AS `n_name`,
+        p.id as `p_id`,
+        p.`name` as `p_name`,
+        d.id as `d_id`,
+        d.`name` as `d_name`,
+        j.id as `j_id`,
+        j.`name` as `j_name`,
+        pos.`id` as `pos_id`,
+        pos.`name` as `pos_name`
+        FROM
+        (
+            SELECT
+                e.id,
+                e.`name`,
+                e.gender,
+                e.birthday,
+                e.idCard,
+                e.wedlock,
+                e.nationId,
+                e.nativePlace,
+                e.politicId,
+                e.email,
+                e.phone,
+                e.address,
+                e.departmentId,
+                e.jobLevelId,
+                e.posId,
+                e.engageForm,
+                e.tiptopDegree,
+                e.specialty,
+                e.school,
+                e.beginDate,
+                e.workState,
+                e.workID,
+                e.contractTerm,
+                e.conversionTime,
+                e.notWorkDate,
+                e.beginContract,
+                e.endContract,
+                e.workAge
+           <include refid="empPageCondition"/>
+           limit #{offset, jdbcType=INTEGER}, #{size, jdbcType=INTEGER}
+        ) emp
+        LEFT JOIN nation n ON emp.nationId = n.id
+        LEFT JOIN politicsstatus p ON emp.politicId = p.id
+        LEFT JOIN department d ON emp.departmentId = d.id
+        LEFT JOIN joblevel j ON emp.jobLevelId = j.id
+        LEFT JOIN position pos ON emp.posId = pos.id;
+        select count(*) as `total_count` <include refid="empPageCondition"/> ;
+    </select>
+
+    <select id="maxWorkId" resultType="int">
+        select max(workID) from employee
+    </select>
+
+    <select id="batchInsertEmployee" parameterType="list">
+        INSERT INTO `employee` <include refid="insertCondition"/> VALUES
+        <foreach collection="empList" open="(" separator="),(" close=")" item="emp">
+            <include refid="selectParam"/>
+        </foreach>
+    </select>
+
+</mapper>

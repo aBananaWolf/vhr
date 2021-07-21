@@ -1,0 +1,4 @@
+spring:
+  profiles:
+    # 本项目区分环境, prov 会有更多页面提示， dev 则会在控制台输出错误
+    active: dev

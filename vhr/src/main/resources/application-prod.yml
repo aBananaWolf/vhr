@@ -1,0 +1,77 @@
+# 服务配置
+server:
+  port: 80
+  servlet:
+    context-path:
+    session:
+      timeout: 6h
+
+spring:
+  # redis
+  redis:
+    host: 172.25.144.179
+    port: 6379
+    database: 0
+    timeout: 10s
+
+  # 数据源
+  datasource:
+    url: jdbc:mysql://172.25.144.179/vhr?useUnicode=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&allowMultiQueries=true
+    username: root
+    password: 3152903564wanyouli@qq.com
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  # 日期格式化
+  mvc:
+    date-format: yyyy-MM-dd
+  # session集群
+  session:
+    store-type: redis
+  # rabbitmq
+  rabbitmq:
+    username: guest
+    password: guest
+    host: 172.25.144.179
+    port: 5672
+    publisher-returns: true
+    publisher-confirm-type: correlated
+    listener:
+      simple:
+        prefetch: 1
+        # 可以设置大点
+        concurrency: 1
+        max-concurrency: 5
+        acknowledge-mode: manual
+        default-requeue-rejected: true
+        # 实际上用不到
+        retry:
+          enabled: true
+          initial-interval: 1500ms
+          max-interval: 2000ms
+          max-attempts: 3
+    template:
+      mandatory: true
+      retry:
+        enabled: false
+  cache:
+    type: redis
+# mybatis-plus
+mybatis-plus:
+  mapper-locations: classpath*:/mappers/*Mapper.xml
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+# 自己配置的elastic-job，注意启动多台机器时，端口号要修改，否则会有奇怪的问题(虽然不修改端口号本身也很奇怪。。)
+#elasticjob:
+#  reg-center:
+#    # zookeeper的服务列表
+#    server-lists: 172.25.144.179
+#    # zookeeper中的节点
+#    namespace: vhr-timedTask
+#    base-sleep-time-milliseconds: 1000
+#    max-sleep-time-milliseconds: 3000
+#    max-retries: 10
+#debug: true
+logging:
+  config: classpath:logback-spring-linux-prod.xml

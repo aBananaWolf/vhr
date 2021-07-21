@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.dao.SmsVerificationCodeSendLogDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.com.entities.SmsVerificationCodeSendLogEntity">
+        <id column="msg_id" property="msgId" />
+        <result column="phone" property="phone" />
+        <result column="code" property="code" />
+        <result column="attempts_count" property="attemptsCount" />
+        <result column="create_time" property="createTime" />
+        <result column="try_time" property="tryTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="status" property="status" />
+        <result column="exchange" property="exchange" />
+        <result column="routing_key" property="routingKey" />
+    </resultMap>
+
+    <select id="findMessageByStatusAndTryTime" parameterType="list" resultMap="BaseResultMap">
+        SELECT
+            sl.msg_id,
+            sl.phone,
+            sl.`code`,
+            sl.attempts_count,
+            sl.create_time,
+            sl.try_time,
+            sl.update_time,
+            sl.`status`,
+            sl.exchange,
+            sl.routing_key
+        from sms_verification_code_send_log sl
+        where
+            sl.`status` = #{smsEntity.status}
+            and sl.try_time &lt;= #{smsEntity.tryTime} limit #{page} , #{size}
+
+    </select>
+
+    <update id="idempotentInConsumers">
+        update sms_verification_code_send_log sl
+        <set>
+            sl.`status` = #{clientReceivedStatus},
+            <if test="smsEntity.tryTime != null">
+                sl.try_time = #{smsEntity.tryTime},
+            </if>
+            <if test="smsEntity.updateTime != null">
+                sl.update_time = #{smsEntity.updateTime},
+            </if>
+            <if test="smsEntity.exchange != null">
+                sl.exchange = #{smsEntity.exchange},
+            </if>
+            <if test="smsEntity.routingKey != null">
+                sl.routing_key = #{smsEntity.routingKey},
+            </if>
+        </set>
+         where sl.msg_id = #{smsEntity.msgId} and sl.`status` = #{smsEntity.status}
+    </update>
+
+</mapper>

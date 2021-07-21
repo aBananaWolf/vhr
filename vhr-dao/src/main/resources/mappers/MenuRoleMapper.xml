@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.dao.MenuRoleDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.com.entities.MenuRoleEntity">
+        <id column="id" property="id" />
+        <result column="mid" property="mid" />
+        <result column="rid" property="rid" />
+    </resultMap>
+
+    <insert id="batchSave" parameterType="list">
+        insert into menu_role (mid,rid) values
+        <foreach collection="list" item="menuRole" open="(" separator="),(" close=")">
+            #{menuRole.mid} , #{menuRole.rid}
+        </foreach>
+    </insert>
+
+    <select id="selectMenuIdsByRid" parameterType="integer" resultType="integer">
+        select mr.mid from menu_role mr where mr.rid = #{roleId}
+    </select>
+</mapper>
