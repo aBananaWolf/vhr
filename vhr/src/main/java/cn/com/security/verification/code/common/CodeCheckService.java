@@ -6,6 +6,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotNull;
 
 /**
  * 统一验证码服务
@@ -20,6 +21,7 @@ public interface CodeCheckService {
      */
     void catchErrorLog(Exception e);
 
+    @NotNull
     CodeOperationService getCodeOperationService();
 
     AuthenticationFailureHandler getLoginFailureHandler();

@@ -88,7 +88,5 @@ public abstract class AbstractVerifyCodeService implements CodeOperationService 
 
 
 
-    @Override
-    public void checkedUserLock(HttpServletRequest request, CodeDetails cacheImageCode) throws AuthenticationException, JsonProcessingException {
-    }
+
 }

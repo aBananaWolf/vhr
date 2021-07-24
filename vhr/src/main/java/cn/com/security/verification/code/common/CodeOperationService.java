@@ -50,15 +50,17 @@ public interface CodeOperationService {
 
 
     /**
-     * 选择实现锁定用户功能
-     * 示例：{@link AbstractSmsCodeService#checkedUserLock(HttpServletRequest, CodeDetails, String)}
+     * 可以选择实现锁定用户功能
+     * 示例：{@link AbstractSmsCodeService#applyPreProcess(HttpServletRequest, CodeDetails)(HttpServletRequest, CodeDetails, String)}
      *
      * @param request
      * @param cacheImageCode
      * @throws AuthenticationException
      * @throws IOException
      */
-    public void checkedUserLock(HttpServletRequest request, CodeDetails cacheImageCode) throws AuthenticationException, IOException;
+    public void applyPreProcess(HttpServletRequest request, CodeDetails cacheImageCode) throws AuthenticationException, IOException;
+    public void applyPostProcess(HttpServletRequest request, CodeDetails cacheImageCode) throws AuthenticationException, IOException;
+    public void applyAfterProcess(HttpServletRequest request, CodeDetails cacheImageCode) throws AuthenticationException, IOException;
 
     // 获取主要参数的方法，由抽象类统一管理，protected方法修饰符
     //    public String getCredential(HttpServletRequest request);

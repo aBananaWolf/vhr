@@ -93,33 +93,42 @@ public class UnifiedCodeCheckFilter extends OncePerRequestFilter {
     private void checkCode(HttpServletRequest request, HttpServletResponse response, CodeCheckService next) throws IOException {
         CodeOperationService codeOperationService = next.getCodeOperationService();
         String code = codeOperationService.obtainCode(request);
-        CodeDetails cacheImageCode = codeOperationService.getCode(request);
+        CodeDetails cacheCode = codeOperationService.getCode(request);
+        try {
+            // 前置处理，短信验证码中锁定了用户，就算是发送空值，也要累计发送次数进行锁定
+            codeOperationService.applyPreProcess(request, cacheCode);
 
-        if (code == null) {
-            throw next.throwCheckedException("验证码不能为空");
-        }
-        if (cacheImageCode == null) {
-            throw next.throwCheckedException("请重新获取验证码");
-        }
-        // 锁定用户
-        codeOperationService.checkedUserLock(request,cacheImageCode);
-
-        if (cacheImageCode.isExpire()) {
-            codeOperationService.removeCode(request);
-            throw next.throwCheckedException("验证码过期");
-        }
-        if (!cacheImageCode.equals(code)) {
-            if (cacheImageCode.maximumCheckCount() == null) {
-                throw next.throwCheckedException("验证码输入错误");
-            } else if (cacheImageCode.maximumCheckCount() >= 0){
-                throw next.throwCheckedException("验证码输入错误，还剩下 " + (cacheImageCode.maximumCheckCount() + 1)+ " 次机会");
-            } else {
-                throw next.throwCheckedException("验证码输入错误，" +cacheImageCode.userLockedTips());
+            // 下面这两个步骤都是要检测的，非空才能继续
+            if (code == null) {
+                throw next.throwCheckedException("验证码不能为空");
             }
-        }
-        codeOperationService.removeCode(request);
-        if (log.isInfoEnabled()) {
-            log.info("验证码校验成功");
+            if (cacheCode == null) {
+                throw next.throwCheckedException("请重新获取验证码");
+            }
+
+            if (cacheCode.isExpire()) {
+                codeOperationService.removeCode(request);
+                throw next.throwCheckedException("验证码过期");
+            }
+            if (!cacheCode.equals(code)) {
+                if (cacheCode.maximumCheckCount() == null) {
+                    throw next.throwCheckedException("验证码输入错误");
+                } else if (cacheCode.maximumCheckCount() >= 0) {
+                    throw next.throwCheckedException("验证码输入错误，还剩下 " + (cacheCode.maximumCheckCount() + 1) + " 次机会");
+                } else {
+                    throw next.throwCheckedException("验证码输入错误，" + cacheCode.userLockedTips());
+                }
+            }
+            codeOperationService.removeCode(request);
+
+            // 后置处理
+            codeOperationService.applyPostProcess(request, cacheCode);
+            if (log.isInfoEnabled()) {
+                log.info("验证码校验成功");
+            }
+        } finally {
+            // 最终处理
+            codeOperationService.applyAfterProcess(request, cacheCode);
         }
     }
 

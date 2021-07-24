@@ -2,6 +2,7 @@ package cn.com.security.verification.code.sms.common;
 
 import cn.com.constant.exception.FailedEnum;
 import cn.com.exception.UserIllegalOperationException;
+import cn.com.security.verification.code.common.AbstractCodeOperationService;
 import cn.com.security.verification.code.common.CodeDetails;
 import cn.com.security.verification.code.common.CodeOperationService;
 import cn.com.security.verification.code.common.UnifiedCodeCheckFilter;
@@ -34,7 +35,7 @@ import java.util.concurrent.TimeUnit;
  * @create 2020-08-04 15:59
  */
 @Slf4j
-public abstract class AbstractSmsCodeService implements CodeOperationService  {
+public abstract class AbstractSmsCodeService extends AbstractCodeOperationService {
 
     // 验证码过期时间
     public final static int EXPIRE_TIME = 300;
@@ -83,7 +84,7 @@ public abstract class AbstractSmsCodeService implements CodeOperationService  {
         smsCode.eraseCredentials();
         // 没有锁住就可以保存
         try {
-            this.checkedUserLock(credential, smsCode);
+            this.applyPreProcess(credential, smsCode);
             // 每天11次重试机会，如果达到重试次数UnifiedCodeCheckFilter会调用本类的userIsLocked()锁定住，无法通过验证
             Integer maximumCountOfCheck= this.getTheMaximumCheckCredentialsForMayBeEmpty(credential);
             // MaximumCheckCount不要为null，检查过滤链为保存后检查，直接获取实体即可
@@ -186,7 +187,7 @@ public abstract class AbstractSmsCodeService implements CodeOperationService  {
      * @throws JsonProcessingException
      */
     @Override
-    public void checkedUserLock(HttpServletRequest request, CodeDetails cacheImageCode) throws AuthenticationException, JsonProcessingException {
+    public void applyPreProcess(HttpServletRequest request, CodeDetails cacheImageCode) throws AuthenticationException, JsonProcessingException {
         // 判断该类是否是AbstractSmsCodeService的超类、超接口或者就是该类
         // 不是AbstractSmsCodeService才做处理，基本上就是走这里了
         if (!this.getClass().isAssignableFrom(AbstractSmsCodeService.class)) {
