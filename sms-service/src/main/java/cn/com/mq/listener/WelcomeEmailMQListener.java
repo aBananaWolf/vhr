@@ -58,7 +58,9 @@ public class WelcomeEmailMQListener {
 
         try {
 //            int a = 1 / 0;
+            // 消息无论发送多少次，数据库中的数据只有一份
             // 保障消息只会消费一次，消息状态从 (1 发送成功) 到 (3 客户端已接收)，重复消息无法再根据 1 的状态进行修改
+            // 要注意的是，用户可能会发送多次消息，虽然消息只会真正消费一次，但是我没有做去除重复的请求
             sendWelcomeMailService.sendWelcomeMail(welcomeMailLogEntity, emp);
             //  正常结束，无论是重复发送的消息还是真的成功，都确认消息(上面的方法已经是幂等的了，走入这里就算成功)
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
